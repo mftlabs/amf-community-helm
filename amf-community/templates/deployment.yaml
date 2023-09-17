@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "amf-community.fullname" . }}
+  labels:
+    {{- include "amf-community.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "amf-community.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "amf-community.selectorLabels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: update-etc-hosts
+        image: busybox
+        volumeMounts:
+        - name: etc-hosts
+          mountPath: /etc-hosts
+        command: 
+        - /bin/sh
+        - -c
+        - |
+          cp /etc/hosts /etc-hosts/hosts
+          echo "127.0.0.1 {{ .Values.aliasDomain }}" >> /etc-hosts/hosts
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          #securityContext:
+            #runAsUser: {{ .Values.securityContext.runAsUser }}
+            #runAsGroup: {{ .Values.securityContext.runAsGroup }}
+          ports:
+            - name: http-45443
+              containerPort: 45443
+            - name: http-8200
+              containerPort: 8200
+            - name: http-4222
+              containerPort: 4222
+            - name: http-25267
+              containerPort: 25267
+          volumeMounts:
+            - name: etc-hosts
+              mountPath: /etc/hosts
+              subPath: hosts
+            - name: amflogs
+              mountPath: /apps/amf/logs
+            - name: amfdata
+              mountPath: /apps/amf/amfdata
+            - name: amfdata
+              mountPath: /apps/sftpgo/data
+            - name: crdbdata
+              mountPath: /apps/crdb/data
+            - name: vaultdata
+              mountPath: /apps/amf/vault/data
+            - name: amflib
+              mountPath: /apps/amf/lib
+
+      volumes:
+        - name: etc-hosts
+          emptyDir: {}
+        - name: amflogs
+          persistentVolumeClaim:
+              claimName: {{ .Release.Name }}-amflogs6
+        - name: amfdata
+          persistentVolumeClaim:
+              claimName: {{ .Release.Name }}-amfdata6
+        - name: crdbdata
+          persistentVolumeClaim:
+              claimName: {{ .Release.Name }}-crdbdata6
+        - name: vaultdata
+          persistentVolumeClaim:
+              claimName: {{ .Release.Name }}-vaultdata6
+        - name: amflib
+          persistentVolumeClaim:
+              claimName: {{ .Release.Name }}-amflib6
+

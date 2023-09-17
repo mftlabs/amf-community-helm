@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "amf-community.fullname" . }}
+  labels:
+    {{- include "amf-community.labels" . | nindent 4 }}
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 45443
+      targetPort: 45443
+      protocol: TCP
+      name: http-45443
+    - port: 8200
+      targetPort: 8200
+      protocol: TCP
+      name: http-8200
+    - port: 4222
+      targetPort: 4222
+      protocol: TCP
+      name: http-4222
+    - port: 26257
+      targetPort: 26257
+      protocol: TCP
+      name: http-26257
+    - port: 25022
+      targetPort: 25022
+      protocol: TCP
+      name: tcp-25022
+    - port: 25443
+      targetPort: 25443
+      protocol: TCP
+      name: http-25443
+  selector:
+    app.kubernetes.io/name: {{ include "amf-community.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
