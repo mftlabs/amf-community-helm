@@ -5,7 +5,7 @@ replicaCount: 1
 
 image:
   repository: mftlabs/community
-  tag: v20230916006
+  tag: linux-arm64
 
 imagePullPolicy: IfNotExists
 
